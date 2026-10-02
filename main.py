@@ -2,6 +2,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 # Controllers
 from controllers.users import router as UsersRouter
@@ -10,6 +11,14 @@ from controllers.annotations import router as AnnotationsRouter
 from controllers.tags import router as TagsRouter
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 app.include_router(UsersRouter, prefix='/api')
 app.include_router(CapturesRouter, prefix='/api')
