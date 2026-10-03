@@ -2,7 +2,7 @@
 # Shared SQLAlchemy Base and an abstract BaseModel that gives every model an id and timestamps.
 
 from sqlalchemy import Column, DateTime, Integer, func
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import declarative_base
 
 # Create a base class for all models
 Base = declarative_base()

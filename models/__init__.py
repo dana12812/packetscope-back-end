@@ -6,3 +6,4 @@ from .capture import CaptureModel
 from .annotation import AnnotationModel
 from .tag import TagModel
 from .capture_tag import CaptureTagModel
+from .activity import ActivityModel

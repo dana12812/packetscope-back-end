@@ -9,6 +9,7 @@ from models.tag import TagModel
 from serializers.tag import TagSchema, TagCreateSchema, TagUpdateSchema
 from database import get_db
 from dependencies.get_current_user import get_current_user
+from lib.activity import log_activity
 
 router = APIRouter()
 
@@ -18,6 +19,7 @@ def create_tag(tag: TagCreateSchema, db: Session = Depends(get_db),
                current_user=Depends(get_current_user)):
     new_tag = TagModel(name=tag.name, color=tag.color, user_id=current_user.id)
     db.add(new_tag)
+    log_activity(db, current_user, "tag.created", tag.name)
     db.commit()
     db.refresh(new_tag)
     return new_tag
@@ -37,7 +39,8 @@ def update_tag(tag_id: int, updates: TagUpdateSchema, db: Session = Depends(get_
     if not tag:
         raise HTTPException(status_code=404, detail="Tag not found")
 
-    if updates.name is not None:
+    if updates.name is not None and updates.name != tag.name:
+        log_activity(db, current_user, "tag.renamed", f"{tag.name} → {updates.name}")
         tag.name = updates.name
     if updates.color is not None:
         tag.color = updates.color
@@ -55,6 +58,7 @@ def delete_tag(tag_id: int, db: Session = Depends(get_db),
     ).first()
     if not tag:
         raise HTTPException(status_code=404, detail="Tag not found")
+    log_activity(db, current_user, "tag.deleted", tag.name)
     db.delete(tag)
     db.commit()
     return None

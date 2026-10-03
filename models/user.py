@@ -20,10 +20,15 @@ class UserModel(BaseModel):
     username = Column(String, unique=True)  # Each username must be unique
     email = Column(String, unique=True)  # Each email must be unique
     password = Column(String, nullable=True)
+    role = Column(String, nullable=False, default="user", server_default="user")  # "user" or "admin"
 
     captures = relationship("CaptureModel", back_populates="user")
     annotations = relationship("AnnotationModel", back_populates="user")
     tags = relationship("TagModel", back_populates="user")
+
+    @property
+    def is_admin(self) -> bool:
+        return self.role == "admin"
 
     def set_password(self, plain_txt_password: str):
         self.password = pwd_context.hash(plain_txt_password)
@@ -37,6 +42,7 @@ class UserModel(BaseModel):
             "iat": datetime.now(timezone.utc),
             "sub": str(self.id),
             "username": self.username,
+            "role": self.role,
         }
 
         token = jwt.encode(payload, JWT_SECRET, algorithm="HS256")

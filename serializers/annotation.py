@@ -1,6 +1,7 @@
 # serializers/annotation.py — request/response schemas for annotations (notes).
 
-from pydantic import BaseModel
+from typing import Optional
+from pydantic import BaseModel, ConfigDict
 from datetime import datetime
 
 
@@ -16,8 +17,9 @@ class AnnotationSchema(BaseModel):
     body: str
     capture_id: int
     user_id: int
+    author_username: Optional[str] = None
+    author_role: Optional[str] = None
     created_at: datetime
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
         
