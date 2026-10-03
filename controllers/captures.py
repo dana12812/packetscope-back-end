@@ -1,4 +1,5 @@
 # controllers/captures.py — CRUD for captures, scoped to the logged-in user.
+# Admins can also read any user's capture (but only owners can change or delete it).
 
 import os
 import tempfile
@@ -13,6 +14,7 @@ from serializers.capture import CaptureSchema, CaptureUpdateSchema
 from database import get_db
 from dependencies.get_current_user import get_current_user
 from lib.pcap_parser import parse_pcap
+from lib.activity import log_activity
 
 router = APIRouter()
 
@@ -51,6 +53,8 @@ def create_capture(file: UploadFile = File(...),
         summary=summary,
     )
     db.add(new_capture)
+    db.flush()  # assigns new_capture.id for the activity row
+    log_activity(db, current_user, "capture.uploaded", new_capture.filename, new_capture.id)
     db.commit()
     db.refresh(new_capture)
     return new_capture
@@ -70,10 +74,10 @@ def get_capture(capture_id: int,
                 db: Session = Depends(get_db),
                 current_user=Depends(get_current_user)):
 
-    capture = db.query(CaptureModel).filter(
-        CaptureModel.id == capture_id,
-        CaptureModel.user_id == current_user.id,
-    ).first()
+    query = db.query(CaptureModel).filter(CaptureModel.id == capture_id)
+    if not current_user.is_admin:
+        query = query.filter(CaptureModel.user_id == current_user.id)
+    capture = query.first()
 
     if not capture:
         raise HTTPException(status_code=404, detail="Capture not found")
@@ -95,7 +99,9 @@ def update_capture(capture_id: int,
     if not capture:
         raise HTTPException(status_code=404, detail="Capture not found")
 
-    if updates.filename is not None:
+    if updates.filename is not None and updates.filename != capture.filename:
+        log_activity(db, current_user, "capture.renamed",
+                     f"{capture.filename} → {updates.filename}", capture.id)
         capture.filename = updates.filename
 
     if updates.tag_ids is not None:
@@ -103,6 +109,7 @@ def update_capture(capture_id: int,
             TagModel.id.in_(updates.tag_ids),
             TagModel.user_id == current_user.id,
         ).all()
+        log_activity(db, current_user, "capture.tags_changed", capture.filename, capture.id)
 
     db.commit()
     db.refresh(capture)
@@ -122,6 +129,7 @@ def delete_capture(capture_id: int,
     if not capture:
         raise HTTPException(status_code=404, detail="Capture not found")
 
+    log_activity(db, current_user, "capture.deleted", capture.filename, capture.id)
     db.delete(capture)
     db.commit()
     return None
