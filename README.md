@@ -124,18 +124,30 @@ Copy `.env.example` to `.env` and fill in the values:
 |---|---|
 | `DATABASE_URL` | PostgreSQL connection string |
 | `JWT_SECRET` | Long random string used to sign tokens |
+| `CORS_ORIGINS` | Front-end URLs allowed to call the API, comma-separated (default `http://localhost:5173`) |
 | `ADMIN_USERNAMES` | Optional — comma-separated usernames that become admin when they sign in |
 
-Create the tables and test data, then start the server:
+Start the server — any missing tables are created automatically on startup:
 
 ```bash
-pipenv run python seed.py
 pipenv run uvicorn main:app --reload
 ```
 
 The API runs at `http://localhost:8000` (interactive docs at `/docs`).
 
-> `seed.py` **drops and recreates** every table. To upgrade an existing database to roles and the activity log without losing data, run `pipenv run python migrate.py` instead — it is safe to run more than once.
+Optional: `pipenv run python seed.py` fills a **local** database with test users, captures and tags. It **drops and recreates** every table, so never run it against the deployed database. To upgrade an older local database to roles and the activity log without losing data, run `pipenv run python migrate.py` — it is safe to run more than once.
+
+### Deployment
+
+The API is deployed on **[Render](https://render.com)** with a **[Neon](https://neon.tech)** PostgreSQL database:
+
+| Render setting | Value |
+|---|---|
+| Build command | `pip install -r requirements.txt` |
+| Start command | `uvicorn main:app --host 0.0.0.0 --port $PORT` |
+| Environment variables | `DATABASE_URL`, `JWT_SECRET`, `CORS_ORIGINS`, `ADMIN_USERNAMES` |
+
+The Python version comes from `.python-version`, and the tables are created on the first start.
 
 ## Admin accounts
 
