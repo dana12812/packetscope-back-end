@@ -25,3 +25,6 @@ htmlcov/
 .vscode/
 .idea/
 .DS_Store
+
+# Local admin credentials (never commit)
+admin-credentials.local.txt

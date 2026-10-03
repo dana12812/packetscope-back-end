@@ -7,7 +7,9 @@ def create_test_users():
     user1.set_password("123")
     user2 = UserModel(username="test_user", email="test@example.com")
     user2.set_password("123")
-    return [user1, user2]
+    admin = UserModel(username="admin", email="admin@example.com", role="admin")
+    admin.set_password("123")
+    return [user1, user2, admin]
 
 
 user_list = create_test_users()
