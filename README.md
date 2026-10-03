@@ -4,7 +4,13 @@
 
 This repository is the **back end** for PacketScope, a network packet-capture analysis app. It handles authentication and user roles, full CRUD for captures, notes and tags, an admin API with an activity log, and parses uploaded `.pcap` / `.pcapng` files with [Scapy](https://scapy.net/) into a compact traffic summary.
 
+It runs on **[Render](https://render.com)** with its PostgreSQL database hosted on **[Neon](https://neon.tech)** — see [Deployment](#deployment).
+
 🖥️ **Front-end repo (full project details, screenshots and planning):** [packetscope-front-end](https://github.com/dana12812/packetscope-front-end)
+
+🌐 **Live app:** [https://packetscope-psi.vercel.app](https://packetscope-psi.vercel.app)
+
+⚙️ **Live API:** [https://packetscope-api.onrender.com](https://packetscope-api.onrender.com/health) — interactive docs at [/docs](https://packetscope-api.onrender.com/docs)
 
 ---
 
@@ -15,8 +21,9 @@ This repository is the **back end** for PacketScope, a network packet-capture an
 3. [Packet parsing](#packet-parsing)
 4. [Authentication & authorization](#authentication--authorization)
 5. [Getting started](#getting-started)
-6. [Admin accounts](#admin-accounts)
-7. [Technologies used](#technologies-used)
+6. [Deployment](#deployment)
+7. [Admin accounts](#admin-accounts)
+8. [Technologies used](#technologies-used)
 ---
 
 ## Data model (ERD)
@@ -137,17 +144,36 @@ The API runs at `http://localhost:8000` (interactive docs at `/docs`).
 
 Optional: `pipenv run python seed.py` fills a **local** database with test users, captures and tags. It **drops and recreates** every table, so never run it against the deployed database. To upgrade an older local database to roles and the activity log without losing data, run `pipenv run python migrate.py` — it is safe to run more than once.
 
-### Deployment
+## Deployment
 
-The API is deployed on **[Render](https://render.com)** with a **[Neon](https://neon.tech)** PostgreSQL database:
+| Part | Platform | Details |
+|---|---|---|
+| **API** | [Render](https://render.com) — Web Service (free) | `https://packetscope-api.onrender.com`, region Oregon, auto-deploys from `master` |
+| **Database** | [Neon](https://neon.tech) — serverless PostgreSQL (free) | Region AWS US West 2 (Oregon), next to the API |
+| **Front end** | [Vercel](https://vercel.com) | `https://packetscope-psi.vercel.app` — see the [front-end repo](https://github.com/dana12812/packetscope-front-end) |
 
-| Render setting | Value |
+**Render settings**
+
+| Setting | Value |
 |---|---|
+| Runtime | Python 3 (version from `.python-version`) |
 | Build command | `pip install -r requirements.txt` |
 | Start command | `uvicorn main:app --host 0.0.0.0 --port $PORT` |
-| Environment variables | `DATABASE_URL`, `JWT_SECRET`, `CORS_ORIGINS`, `ADMIN_USERNAMES` |
 
-The Python version comes from `.python-version`, and the tables are created on the first start.
+**Environment variables on Render**
+
+| Variable | Value |
+|---|---|
+| `DATABASE_URL` | Neon connection string (`postgresql://…?sslmode=require`) |
+| `JWT_SECRET` | A long random string, different from the local one |
+| `CORS_ORIGINS` | `https://packetscope-psi.vercel.app,http://localhost:5173` |
+| `ADMIN_USERNAMES` | Usernames that become admin when they sign in |
+
+Notes:
+
+- The tables are created automatically on the first start — `seed.py` is never run against the Neon database.
+- Render's free tier sleeps after about 15 minutes without traffic; the first request afterwards takes up to a minute while it wakes up.
+- Secrets live only in Render's environment settings, never in the repository.
 
 ## Admin accounts
 
@@ -165,9 +191,10 @@ There are three ways to make someone an admin:
 | **Framework** | FastAPI, Uvicorn |
 | **ORM** | SQLAlchemy |
 | **Validation** | Pydantic v2 |
-| **Database** | PostgreSQL (psycopg2) |
+| **Database** | PostgreSQL (psycopg2), hosted on [Neon](https://neon.tech) |
 | **Auth** | JWT (PyJWT), bcrypt (passlib) |
 | **Packet parsing** | Scapy |
+| **Hosting** | [Render](https://render.com) (API), [Neon](https://neon.tech) (database) |
 
 
 
