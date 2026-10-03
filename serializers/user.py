@@ -1,6 +1,6 @@
 # serializers/user.py — request/response schemas for users and auth.
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class UserRegistrationSchema(BaseModel):
@@ -18,9 +18,9 @@ class UserSchema(BaseModel):
     id: int
     username: str
     email: str
+    role: str = "user"
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class UserTokenSchema(BaseModel):

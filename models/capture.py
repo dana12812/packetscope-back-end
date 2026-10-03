@@ -15,6 +15,10 @@ class CaptureModel(BaseModel):
     summary = Column(JSON)
 
     user = relationship("UserModel", back_populates="captures")
+
+    @property
+    def owner_username(self):
+        return self.user.username if self.user else None
     annotations = relationship(
         "AnnotationModel", back_populates="capture", cascade="all, delete-orphan"
     )

@@ -15,3 +15,12 @@ class AnnotationModel(BaseModel):
 
     capture = relationship("CaptureModel", back_populates="annotations")
     user = relationship("UserModel", back_populates="annotations")
+
+    # Shown above each note so readers know who wrote it
+    @property
+    def author_username(self):
+        return self.user.username if self.user else None
+
+    @property
+    def author_role(self):
+        return self.user.role if self.user else None
