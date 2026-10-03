@@ -17,7 +17,8 @@ http_bearer = HTTPBearer()
 def get_current_user(db: Session = Depends(get_db), token: str = Depends(http_bearer)):
     try:
         payload = jwt.decode(token.credentials, JWT_SECRET, algorithms=["HS256"])
-        current_user_id = payload.get("sub")
+        # "sub" is a string in the token; users.id is an integer column
+        current_user_id = int(payload.get("sub"))
 
         user = db.query(UserModel).filter(UserModel.id == current_user_id).first()
 
@@ -30,7 +31,7 @@ def get_current_user(db: Session = Depends(get_db), token: str = Depends(http_be
     except ExpiredSignatureError:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                             detail="Token has expired")
-    except InvalidSubjectError:
+    except (InvalidSubjectError, TypeError, ValueError):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                             detail="Token invalid")
     return user
