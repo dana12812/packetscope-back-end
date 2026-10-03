@@ -1,7 +1,7 @@
 # serializers/tag.py — request/response schemas for tags.
 
 from typing import Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class TagCreateSchema(BaseModel):
@@ -17,6 +17,5 @@ class TagSchema(BaseModel):
     name: str
     color: Optional[str] = None
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
         
