@@ -19,30 +19,24 @@ from data.capture_data import create_test_captures
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(bind=engine)
 
-try:
-    print("Recreating database...")
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
+Base.metadata.drop_all(bind=engine)
+Base.metadata.create_all(bind=engine)
 
-    print("Seeding the database...")
-    db = SessionLocal()
+db = SessionLocal()
 
-    # Users first, so they get ids
-    db.add_all(user_list)
-    db.commit()
+# Users first, so they get ids
+db.add_all(user_list)
+db.commit()
 
-    # Tags and captures belong to the first user
-    first_user = user_list[0]
-    tags = create_test_tags(first_user)
-    captures = create_test_captures(first_user)
-    db.add_all(tags + captures)
-    db.commit()
+# Tags and captures belong to the first user
+first_user = user_list[0]
+tags = create_test_tags(first_user)
+captures = create_test_captures(first_user)
+db.add_all(tags + captures)
+db.commit()
 
-    # Attach one tag to the first capture (seeds the capture_tags join table)
-    captures[0].tags = [tags[0]]
-    db.commit()
+# Attach one tag to the first capture (seeds the capture_tags join table)
+captures[0].tags = [tags[0]]
+db.commit()
 
-    db.close()
-    print("Database seeding complete!")
-except Exception as e:
-    print("An error occurred:", e)
+db.close()

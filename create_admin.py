@@ -34,7 +34,6 @@ try:
     if user:
         user.role = "admin"
         user.set_password(password)
-        action = f"Updated '{user.username}': now an admin with the new password"
     else:
         if not args.email:
             sys.exit("New account: pass --email too.")
@@ -45,8 +44,6 @@ try:
         db.add(user)
         db.flush()
         log_activity(db, user, "user.registered")
-        action = f"Created admin '{user.username}'"
     db.commit()
-    print(action)
 finally:
     db.close()

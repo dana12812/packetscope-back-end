@@ -28,12 +28,7 @@ if not db.query(UserModel).filter(UserModel.role == "admin").first():
     existing = db.query(UserModel).filter(UserModel.username == seed_admin.username).first()
     if existing:
         existing.role = "admin"
-        print(f"Promoted existing user '{existing.username}' to admin")
     else:
         db.add(seed_admin)
-        print(f"Created admin user '{seed_admin.username}' (password: see data/user_data.py)")
     db.commit()
-else:
-    print("An admin already exists — no user changes")
 db.close()
-print("Migration complete")
